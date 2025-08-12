@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Tokenizer Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .output {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            min-height: 50px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .stat {
+            background: #f0f4ff;
+            padding: 10px 15px;
+            border-radius: 6px;
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            margin-top: 5px;
+        }
+
+        .vocab-display {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .vocab-item {
+            display: inline-block;
+            background: white;
+            padding: 5px 10px;
+            margin: 3px;
+            border-radius: 4px;
+            font-size: 12px;
+            border: 1px solid #ddd;
+        }
+
+        .token-id {
+            color: #667eea;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
+        .special-token {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="number"] {
+            width: 100px;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔤 Simple Tokenizer Interface</h1>
+        
+        <div class="grid">
+            <!-- Training Section -->
+            <div class="card">
+                <h2>📚 Train Tokenizer</h2>
+                <div class="input-group">
+                    <label for="trainingData">Training Data (one sentence per line):</label>
+                    <textarea id="trainingData" rows="8" placeholder="Enter training sentences here...
+Hello, world! This is a simple tokenizer.
+It can handle punctuation and basic text processing.
+The tokenizer splits text into tokens and assigns IDs."></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="minFreq">Minimum Frequency:</label>
+                    <input type="number" id="minFreq" value="1" min="1">
+                </div>
+                <button onclick="trainTokenizer()">Train Tokenizer</button>
+                <div id="trainStatus"></div>
+            </div>
+
+            <!-- Vocabulary Display -->
+            <div class="card">
+                <h2>📖 Vocabulary</h2>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-label">Total Tokens</div>
+                        <div class="stat-value" id="vocabSize">0</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Special Tokens</div>
+                        <div class="stat-value">4</div>
+                    </div>
+                </div>
+                <div class="vocab-display" id="vocabDisplay">
+                    <p style="color: #999;">No vocabulary loaded. Train the tokenizer first.</p>
+                </div>
+            </div>
+
+            <!-- Encode Section -->
+            <div class="card">
+                <h2>🔐 Encode Text</h2>
+                <div class="input-group">
+                    <label for="encodeInput">Input Text:</label>
+                    <textarea id="encodeInput" rows="4" placeholder="Enter text to encode..."></textarea>
+                </div>
+                <button onclick="encodeText()">Encode</button>
+                <div class="input-group">
+                    <label>Token IDs:</label>
+                    <div class="output" id="encodeOutput">Output will appear here...</div>
+                </div>
+                <div class="input-group">
+                    <label>Tokens:</label>
+                    <div class="output" id="tokenOutput">Tokens will appear here...</div>
+                </div>
+            </div>
+
+            <!-- Decode Section -->
+            <div class="card">
+                <h2>🔓 Decode Token IDs</h2>
+                <div class="input-group">
+                    <label for="decodeInput">Token IDs (comma-separated):</label>
+                    <textarea id="decodeInput" rows="4" placeholder="Enter token IDs (e.g., 2, 5, 10, 3)"></textarea>
+                </div>
+                <button onclick="decodeText()">Decode</button>
+                <div class="input-group">
+                    <label>Decoded Text:</label>
+                    <div class="output" id="decodeOutput">Output will appear here...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // SimpleTokenizer implementation in JavaScript
+        class SimpleTokenizer {
+            constructor() {
+                this.vocab = {};
+                this.inverseVocab = {};
+                this.vocabSize = 0;
+                
+                // Special tokens
+                this.specialTokens = {
+                    '<PAD>': 0,
+                    '<UNK>': 1,
+                    '<BOS>': 2,
+                    '<EOS>': 3
+                };
+                
+                // Initialize vocab with special tokens
+                for (const [token, idx] of Object.entries(this.specialTokens)) {
+                    this.vocab[token] = idx;
+                    this.inverseVocab[idx] = token;
+                }
+                
+                this.vocabSize = Object.keys(this.specialTokens).length;
+            }
+            
+            basicTokenize(text) {
+                const tokens = [];
+                const words = text.toLowerCase().split(/\s+/);
+                
+                for (const word of words) {
+                    if (!word) continue;
+                    
+                    let current = '';
+                    for (const char of word) {
+                        if (/[a-zA-Z0-9]/.test(char)) {
+                            current += char;
+                        } else {
+                            if (current) {
+                                tokens.push(current);
+                                current = '';
+                            }
+                            if (char.trim()) {
+                                tokens.push(char);
+                            }
+                        }
+                    }
+                    if (current) {
+                        tokens.push(current);
+                    }
+                }
+                
+                return tokens;
+            }
+            
+            buildVocab(texts, minFreq = 1) {
+                const tokenFreq = {};
+                
+                for (const text of texts) {
+                    const tokens = this.basicTokenize(text);
+                    for (const token of tokens) {
+                        tokenFreq[token] = (tokenFreq[token] || 0) + 1;
+                    }
+                }
+                
+                // Reset vocab but keep special tokens
+                this.vocab = {...this.specialTokens};
+                this.inverseVocab = {};
+                for (const [token, idx] of Object.entries(this.specialTokens)) {
+                    this.inverseVocab[idx] = token;
+                }
+                this.vocabSize = Object.keys(this.specialTokens).length;
+                
+                // Add tokens that meet minimum frequency
+                for (const [token, freq] of Object.entries(tokenFreq)) {
+                    if (freq >= minFreq && !(token in this.vocab)) {
+                        this.vocab[token] = this.vocabSize;
+                        this.inverseVocab[this.vocabSize] = token;
+                        this.vocabSize++;
+                    }
+                }
+            }
+            
+            encode(text, addSpecialTokens = true) {
+                const tokens = this.basicTokenize(text);
+                const tokenIds = [];
+                
+                if (addSpecialTokens) {
+                    tokenIds.push(this.specialTokens['<BOS>']);
+                }
+                
+                for (const token of tokens) {
+                    if (token in this.vocab) {
+                        tokenIds.push(this.vocab[token]);
+                    } else {
+                        tokenIds.push(this.specialTokens['<UNK>']);
+                    }
+                }
+                
+                if (addSpecialTokens) {
+                    tokenIds.push(this.specialTokens['<EOS>']);
+                }
+                
+                return tokenIds;
+            }
+            
+            decode(tokenIds, skipSpecialTokens = true) {
+                const tokens = [];
+                
+                for (const tokenId of tokenIds) {
+                    if (tokenId in this.inverseVocab) {
+                        const token = this.inverseVocab[tokenId];
+                        
+                        if (skipSpecialTokens && token in this.specialTokens) {
+                            continue;
+                        }
+                        
+                        tokens.push(token);
+                    } else {
+                        tokens.push('<UNK>');
+                    }
+                }
+                
+                return tokens.join(' ');
+            }
+            
+            getTokensForIds(tokenIds) {
+                const tokens = [];
+                for (const tokenId of tokenIds) {
+                    if (tokenId in this.inverseVocab) {
+                        tokens.push(this.inverseVocab[tokenId]);
+                    } else {
+                        tokens.push('<UNK>');
+                    }
+                }
+                return tokens;
+            }
+        }
+
+        // Global tokenizer instance
+        let tokenizer = new SimpleTokenizer();
+
+        function trainTokenizer() {
+            const trainingData = document.getElementById('trainingData').value;
+            const minFreq = parseInt(document.getElementById('minFreq').value) || 1;
+            
+            if (!trainingData.trim()) {
+                showStatus('trainStatus', 'Please enter training data!', 'alert-info');
+                return;
+            }
+            
+            const texts = trainingData.split('\n').filter(line => line.trim());
+            tokenizer.buildVocab(texts, minFreq);
+            
+            showStatus('trainStatus', `✅ Tokenizer trained successfully! Vocabulary size: ${tokenizer.vocabSize}`, 'alert-success');
+            updateVocabDisplay();
+        }
+
+        function updateVocabDisplay() {
+            const vocabDisplay = document.getElementById('vocabDisplay');
+            const vocabSize = document.getElementById('vocabSize');
+            
+            vocabSize.textContent = tokenizer.vocabSize;
+            
+            let html = '';
+            for (const [token, id] of Object.entries(tokenizer.vocab)) {
+                const isSpecial = token in tokenizer.specialTokens;
+                html += `<span class="vocab-item ${isSpecial ? 'special-token' : ''}">
+                    ${token}<span class="token-id">${id}</span>
+                </span>`;
+            }
+            
+            vocabDisplay.innerHTML = html || '<p style="color: #999;">No vocabulary loaded.</p>';
+        }
+
+        function encodeText() {
+            const text = document.getElementById('encodeInput').value;
+            
+            if (!text.trim()) {
+                document.getElementById('encodeOutput').textContent = 'Please enter text to encode!';
+                return;
+            }
+            
+            if (tokenizer.vocabSize <= 4) {
+                document.getElementById('encodeOutput').textContent = 'Please train the tokenizer first!';
+                return;
+            }
+            
+            const encoded = tokenizer.encode(text);
+            const tokens = tokenizer.getTokensForIds(encoded);
+            
+            document.getElementById('encodeOutput').textContent = `[${encoded.join(', ')}]`;
+            document.getElementById('tokenOutput').textContent = tokens.map(t => `"${t}"`).join(' → ');
+        }
+
+        function decodeText() {
+            const input = document.getElementById('decodeInput').value;
+            
+            if (!input.trim()) {
+                document.getElementById('decodeOutput').textContent = 'Please enter token IDs to decode!';
+                return;
+            }
+            
+            try {
+                const tokenIds = input.split(',').map(id => parseInt(id.trim()));
+                const decoded = tokenizer.decode(tokenIds);
+                document.getElementById('decodeOutput').textContent = decoded || '(empty output)';
+            } catch (e) {
+                document.getElementById('decodeOutput').textContent = 'Error: Invalid token IDs format!';
+            }
+        }
+
+        function showStatus(elementId, message, className) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="alert ${className}">${message}</div>`;
+            setTimeout(() => {
+                element.innerHTML = '';
+            }, 5000);
+        }
+
+        // Add some default training data on load
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('trainingData').value = `Hello, world! This is a simple tokenizer.
+It can handle punctuation and basic text processing.
+The tokenizer splits text into tokens and assigns IDs.
+Hello there! How are you doing today?
+This is another example sentence for training.`;
+        });
+    </script>
+</body>
+</html>
